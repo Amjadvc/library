@@ -1,9 +1,9 @@
 <?php
 
-namespace App;
+namespace App\Helpers;
 
 class ResponseHelper{
-    static function success($message ="تمت العملية بنجاح" , $data = null){
+        static function success($message ="تمت العملية بنجاح", $data = null){
         return [
             'success' => true,
             'message' => $message,
@@ -18,3 +18,4 @@ class ResponseHelper{
         ];
     }
 }
+

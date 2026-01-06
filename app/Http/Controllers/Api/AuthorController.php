@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Author;
-use App\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use Illuminate\Http\Request;
 
 class AuthorController extends Controller

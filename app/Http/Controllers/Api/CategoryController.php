@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -23,14 +24,27 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|max:50|unique:categories'
+            'name' => 'required|max:50|unique:categories',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
-        $category = new Category();
-        $category->name = $request->name;
-        $category->save();
+
+
+        $category = Category::create([
+        'name' => $request->name
+        ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = $category->id . '.' . $file->extension(); // or use name
+            Storage::putFileAs('category-images', $file, $filename);
+            $category->image = $filename;
+            $category->save();
+        }
+
         return ResponseHelper::success("تمت إضافة الصنف" , $category);
     }
 
