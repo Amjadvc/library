@@ -28,6 +28,8 @@ class StoreBookRequest extends FormRequest
             'mortgage' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'cover' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'authors' => 'nullable|array',
+            'authors.*' => 'exists:authors,id',
         ];
     }
 }

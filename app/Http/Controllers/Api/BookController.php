@@ -19,8 +19,8 @@ class BookController extends Controller
      */
     public function index()
     {
-        $book = Book::all();
-        return ResponseHelper::success(' جميع الكتب', $book);
+        $books = Book::with(['category', 'authors'])->get();
+        return ResponseHelper::success(' جميع الكتب', $books);
     }
 
 
@@ -30,7 +30,7 @@ class BookController extends Controller
      */
     public function store(StoreBookRequest $request)
     {
-        $book = Book::create($request->all());
+        $book = Book::create($request->except('authors'));
 
         if ($request->hasFile('cover')){
             $file = $request->file('cover');
@@ -39,6 +39,13 @@ class BookController extends Controller
             $book->cover = $filename;
             $book->save();
         }
+        
+        // Attach authors to the book
+        if ($request->has('authors')) {
+            $book->authors()->attach($request->authors);
+        }
+        
+        $book->load(['category', 'authors']);
         return ResponseHelper::success("تمت إضافة الكتاب", $book);
 
      
@@ -51,7 +58,8 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        $book->load(['category', 'authors']);
+        return ResponseHelper::success("تفاصيل الكتاب", $book);
     }
 
 
@@ -60,7 +68,29 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book)
     {
-        $book->update($request->all());
+        // Update book fields except authors
+        $book->update($request->except('authors', 'cover'));
+        
+        // Handle cover image update
+        if ($request->hasFile('cover')) {
+            // Delete old cover if exists
+            if ($book->cover) {
+                Storage::delete('book-images/' . $book->cover);
+            }
+            
+            $file = $request->file('cover');
+            $filename = "$request->ISBN." . $file->extension();
+            Storage::putFileAs('book-images', $file, $filename);
+            $book->cover = $filename;
+            $book->save();
+        }
+        
+        // Update authors using sync (replace old authors with new ones)
+        if ($request->has('authors')) {
+            $book->authors()->sync($request->authors);
+        }
+        
+        $book->load(['category', 'authors']);
         return ResponseHelper::success("تمت تعديل الكتاب", $book);
 
     }
@@ -70,6 +100,14 @@ class BookController extends Controller
      */
     public function destroy(Book $book)
     {
+        // Delete the cover image if exists
+        if ($book->cover) {
+            Storage::delete('book-images/' . $book->cover);
+        }
+        
+        // Detach authors before deleting the book
+        $book->authors()->detach();
+        
         $book->delete();
         return ResponseHelper::success("تمت حذف الكتاب", $book);
     }

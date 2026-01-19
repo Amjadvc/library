@@ -31,6 +31,8 @@ class UpdateBookRequest extends FormRequest
             'mortgage' => 'sometimes|numeric|min:0',
             'category_id' => 'sometimes|exists:categories,id',
             'cover' => 'sometimes|nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'authors' => 'sometimes|array',
+            'authors.*' => 'exists:authors,id',
         ];
     }
 }
